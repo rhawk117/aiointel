@@ -1,6 +1,7 @@
 # aiointel/http/_client.py
+import abc
 import dataclasses as dc
-from typing import Any
+from typing import Any, Self
 
 import httpx
 
@@ -20,7 +21,6 @@ from aiointel.http._types import ClientTimeouts, Middleware
 
 @dc.dataclass(slots=True)
 class ClientOptions:
-    base_url: httpx.URL | str = ''
     auth: httpx.Auth | None = None
     follow_redirects: bool = False
     max_redirects: int = 20
@@ -53,7 +53,6 @@ class ClientOptions:
 
     def to_kwargs(self) -> dict[str, Any]:
         return {
-            'base_url': self.base_url,
             'auth': self.auth,
             'follow_redirects': self.follow_redirects,
             'max_redirects': self.max_redirects,
@@ -67,6 +66,7 @@ class ClientOptions:
 
 def create_async_client(
     *,
+    base_url: str | httpx.URL = '',
     client_options: ClientOptions | None = None,
     user_agent_randomizer: UserAgentRandomizer | bool = False,
     transport_options: TransportOptions | None = None,
@@ -100,6 +100,46 @@ def create_async_client(
 
     return httpx.AsyncClient(
         **client_options.to_kwargs(),
+        base_url=base_url,
         transport=transport,
         event_hooks=middleware,  # type: ignore[arg-type]
     )
+
+
+class AiointelBaseClient:
+    base_url: str = ''
+
+    def __init__(
+        self,
+        *,
+        client_options: ClientOptions | None = None,
+        user_agent_randomizer: UserAgentRandomizer | bool = False,
+        transport_options: TransportOptions | None = None,
+        url_restrictions: URLRestrictions | None = None,
+        middleware: Middleware | None = None,
+        custom_transport: httpx.AsyncBaseTransport | None = None,
+    ) -> None:
+        self._client = create_async_client(
+            base_url=self.base_url,
+            client_options=client_options,
+            user_agent_randomizer=user_agent_randomizer,
+            transport_options=transport_options,
+            url_restrictions=url_restrictions,
+            middleware=middleware,
+            custom_transport=custom_transport,
+        )
+
+    async def __aenter__(self) -> Self:
+        await self._client.__aenter__()
+        return self
+
+    async def __aexit__(self, *args: Any) -> None:
+        await self._client.__aexit__(*args)
+
+    @property
+    def client(self) -> httpx.AsyncClient:
+        return self._client
+
+    async def aclose(self) -> None:
+        await self._client.aclose()
+

@@ -1,4 +1,4 @@
-from aiointel.http._client import ClientOptions, create_async_client
+from aiointel.http._client import ClientOptions, create_async_client, AiointelBaseClient
 from aiointel.http._headers import (
     BrowserHeaderOptions,
     BrowserHeaders,
@@ -31,6 +31,7 @@ from aiointel.http._types import (
 from aiointel.http._retry import httpx_retry
 
 __all__ = (
+    'AiointelBaseClient',
     'BrowserHeaderOptions',
     'BrowserHeaders',
     'CertTypes',
