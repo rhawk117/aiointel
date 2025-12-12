@@ -28,6 +28,7 @@ from aiointel.http._types import (
     UAVersionRanges,
     VerifyType,
 )
+from aiointel.http._retry import httpx_retry
 
 __all__ = (
     'BrowserHeaderOptions',
@@ -55,4 +56,5 @@ __all__ = (
     'VerifyType',
     'create_async_client',
     'create_async_transport',
+    'httpx_retry',
 )

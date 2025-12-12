@@ -12,10 +12,8 @@ from aiointel.http._types import (
     TransportSocketOptions,
     VerifyType,
 )
+from aiointel.http._exceptions import URLPolicyError
 
-
-class URLPolicyError(httpx.RequestError):
-    '''Raised when a request violates URLRestrictions.'''
 
 
 def is_host_private_literal(host: str | None) -> bool:
